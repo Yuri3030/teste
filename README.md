@@ -29,6 +29,10 @@ void submitClock(Clock clock) {
     taskQueue[taskCount] = clock;
     taskCount++;
 
+    if (taskCount == BUFFER_SIZE) {
+        printf(">> [Fila Cheia] Nenhum espaço disponível. Produtores aguardando...\n");
+    }
+
     pthread_mutex_unlock(&mutex);
     pthread_cond_signal(&condEmpty);
 }
@@ -46,6 +50,10 @@ Clock getClock() {
     }
     taskCount--;
 
+    if (taskCount == 0) {
+        printf("<< [Fila Vazia] Nenhum item disponível. Consumidores aguardando...\n");
+    }
+
     pthread_mutex_unlock(&mutex);
     pthread_cond_signal(&condFull);
 
@@ -57,7 +65,7 @@ void *producerThread(void* arg) {
     while (1) {
         Clock clock;
         for (int i = 0; i < 3; i++) {
-            clock.p[i] = rand() % 10;
+            clock.p[i] = rand() % 100;  // clock entre 0 e 99
         }
         printf("[Produtor %ld] Gerou clock: (%d, %d, %d)\n", id, clock.p[0], clock.p[1], clock.p[2]);
         submitClock(clock);
@@ -87,13 +95,11 @@ int main() {
     pthread_t producers[PRODUCER_NUM];
     pthread_t consumers[CONSUMER_NUM];
 
-    // Criar threads produtoras com intervalo de 1 segundo
     for (long i = 0; i < PRODUCER_NUM; i++) {
         pthread_create(&producers[i], NULL, producerThread, (void*)i);
         sleep(1);
     }
 
-    // Criar threads consumidoras com intervalo de 1 segundo
     for (long i = 0; i < CONSUMER_NUM; i++) {
         pthread_create(&consumers[i], NULL, consumerThread, (void*)i);
         sleep(1);
@@ -113,3 +119,4 @@ int main() {
 
     return 0;
 }
+
