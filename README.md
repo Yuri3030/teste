@@ -7,6 +7,7 @@
 #define PRODUCER_NUM 3
 #define CONSUMER_NUM 3
 #define BUFFER_SIZE 10
+#define MAX_OPERATIONS 100
 
 typedef struct Clock {
     int p[3];
@@ -62,26 +63,34 @@ Clock getClock() {
 
 void *producerThread(void* arg) {
     long id = (long)arg;
-    while (1) {
+    int count = 0;
+
+    while (count < MAX_OPERATIONS) {
         Clock clock;
         for (int i = 0; i < 3; i++) {
-            clock.p[i] = rand() % 100;  // clock entre 0 e 99
+            clock.p[i] = rand() % 100;  // valores entre 0 e 99
         }
         printf("[Produtor %ld] Gerou clock: (%d, %d, %d)\n", id, clock.p[0], clock.p[1], clock.p[2]);
         submitClock(clock);
+        count++;
         sleep(1);
     }
+    printf("[Produtor %ld] Finalizou após %d operações.\n", id, count);
     return NULL;
 }
 
 void *consumerThread(void* arg) {
     long id = (long)arg;
-    while (1) {
+    int count = 0;
+
+    while (count < MAX_OPERATIONS) {
         Clock clock = getClock();
         clock.p[id]++;
         printf("[Consumidor %ld] Executou tarefa, Clock: (%d, %d, %d)\n", id, clock.p[0], clock.p[1], clock.p[2]);
+        count++;
         sleep(1);
     }
+    printf("[Consumidor %ld] Finalizou após %d operações.\n", id, count);
     return NULL;
 }
 
@@ -117,6 +126,9 @@ int main() {
     pthread_cond_destroy(&condEmpty);
     pthread_cond_destroy(&condFull);
 
+    printf("Programa finalizado após todos os produtores e consumidores completarem 100 operações.\n");
+
     return 0;
 }
+
 
